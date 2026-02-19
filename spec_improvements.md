@@ -227,7 +227,8 @@ src/
 ```json
 {
   "dependencies": {
-    "three": "^0.175.0"
+    "three": "^0.175.0",
+    "three-bvh-csg": "^0.0.16"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
@@ -343,17 +344,11 @@ All elements positioned relative to housing base (Y=0.4):
 - Removal notch at top of cover
 
 ### Cartridge Slot (Back Top of Device)
-- Slot opening: 3.8 x 0.08 x 0.6 units, black interior
-- Position: (0, -0.04, -2.5) - back top center of device
-
-### BRICKDROP Cartridge
-- Body: 3.6 x 0.5 x 0.4 units, dark gray (0x2D2D2D)
-- Nearly full width of handheld (4.5 units)
-- Label: Purple background (0x7B3FA0) with "BRICKDROP" text, visible on back
-- Label size: 3.4 x 0.35 units
-- 3 grip lines on front for finger grip
-- Position: (0, -0.15, -2.5) - inserted into back slot
-- Only top portion visible with label facing up/back
+- Slot cut into housing using CSG (Constructive Solid Geometry) subtraction
+- Uses `three-bvh-csg` library with `Brush` and `Evaluator` classes
+- Slot dimensions: 70% of housing width (3.15), 15% of housing depth (0.9), 35% of housing height (0.28)
+- Position: Top edge of back face (Y=0.14, Z=-2.55) - where "top" is the edge nearest the top of the screen
+- The slot is a true hole cut through the housing geometry, not a separate mesh
 
 ### Button Mapping to 3D Buttons
 ```typescript

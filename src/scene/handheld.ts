@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'three-bvh-csg';
 
 const HOUSING_COLOR = 0xC4C4C4;
 const SCREEN_BEZEL_COLOR = 0x4A5568;
@@ -38,7 +39,6 @@ export function createHandheld(): HandheldParts {
   createSpeakerGrille(group);
   createBranding(group);
   createBackDetails(group);
-  createCartridgeSlot(group);
 
   return { group, screen, buttons };
 }
@@ -50,14 +50,25 @@ function createHousing(group: THREE.Group): void {
     metalness: 0.1,
   });
 
-  const base = new THREE.Mesh(
-    new RoundedBoxGeometry(4.5, 0.8, 6.0, 4, 0.15),
-    housingMaterial
-  );
-  base.position.y = 0.4;
-  base.castShadow = true;
-  base.receiveShadow = true;
-  group.add(base);
+  const slotWidth = 4.5 * 0.7;
+  const slotHeight = 6.0 * 0.15;
+  const slotDepth = 0.8 * 0.35;
+
+  const baseGeometry = new RoundedBoxGeometry(4.5, 0.8, 6.0, 4, 0.15);
+  const baseBrush = new Brush(baseGeometry, housingMaterial);
+  baseBrush.position.y = 0.4;
+  baseBrush.updateMatrixWorld();
+
+  const slotGeometry = new THREE.BoxGeometry(slotWidth, slotDepth + 0.01, slotHeight + 0.01);
+  const slotBrush = new Brush(slotGeometry, new THREE.MeshStandardMaterial({ color: 0x000000 }));
+  slotBrush.position.set(0, slotDepth / 2, -3.0 + slotHeight / 2);
+  slotBrush.updateMatrixWorld();
+
+  const evaluator = new Evaluator();
+  const result = evaluator.evaluate(baseBrush, slotBrush, SUBTRACTION);
+  result.castShadow = true;
+  result.receiveShadow = true;
+  group.add(result);
 
   const bezelThickness = 0.15;
   const bezelHeight = 0.15;
@@ -345,86 +356,4 @@ function createBackDetails(group: THREE.Group): void {
   );
   notch.position.set(0, 0.0, 0.12);
   group.add(notch);
-}
-
-function createCartridgeSlot(group: THREE.Group): void {
-  const slotMaterial = new THREE.MeshStandardMaterial({
-    color: 0x3A3A3A,
-    roughness: 0.7,
-    metalness: 0.2,
-  });
-
-  const slotOpening = new THREE.Mesh(
-    new THREE.BoxGeometry(3.8, 0.08, 0.6),
-    new THREE.MeshStandardMaterial({
-      color: 0x1A1A1A,
-      roughness: 0.9,
-    })
-  );
-  slotOpening.position.set(0, -0.04, -2.5);
-  group.add(slotOpening);
-
-  const cartridge = createCartridge();
-  cartridge.position.set(0, -0.15, -2.5);
-  group.add(cartridge);
-}
-
-function createCartridge(): THREE.Group {
-  const cartridgeGroup = new THREE.Group();
-
-  const cartMaterial = new THREE.MeshStandardMaterial({
-    color: 0x2D2D2D,
-    roughness: 0.6,
-    metalness: 0.1,
-  });
-
-  const cartBody = new THREE.Mesh(
-    new RoundedBoxGeometry(3.6, 0.5, 0.4, 2, 0.05),
-    cartMaterial
-  );
-  cartridgeGroup.add(cartBody);
-
-  const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 512;
-  labelCanvas.height = 128;
-  const ctx = labelCanvas.getContext('2d')!;
-  
-  ctx.fillStyle = '#7B3FA0';
-  ctx.fillRect(0, 0, 512, 128);
-  
-  ctx.font = 'bold 48px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('BRICKDROP', 256, 64);
-
-  const labelTexture = new THREE.CanvasTexture(labelCanvas);
-  const labelTexturedMaterial = new THREE.MeshStandardMaterial({
-    map: labelTexture,
-    roughness: 0.5,
-  });
-
-  const labelTextured = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.4, 0.35),
-    labelTexturedMaterial
-  );
-  labelTextured.position.set(0, -0.26, 0);
-  labelTextured.rotation.x = Math.PI / 2;
-  cartridgeGroup.add(labelTextured);
-
-  const gripMaterial = new THREE.MeshStandardMaterial({
-    color: 0x1A1A1A,
-    roughness: 0.9,
-  });
-
-  for (let i = 0; i < 3; i++) {
-    const grip = new THREE.Mesh(
-      new THREE.BoxGeometry(3.0, 0.02, 0.02),
-      gripMaterial
-    );
-    grip.position.set(0, 0.2, 0.12 - i * 0.06);
-    cartridgeGroup.add(grip);
-  }
-
-  return cartridgeGroup;
 }
