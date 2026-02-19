@@ -399,6 +399,155 @@ START_SELECT_COLOR = 0x4A4A4A // Dark gray
 
 ---
 
+## 13. Cartridge Insertion Feature
+
+### Overview
+The app opens with an empty handheld (blank screen) and a full cartridge model visible to the right. Clicking the cartridge inserts it into the handheld with a smooth animation, and the game starts once inserted.
+
+### File Structure Additions
+```
+src/scene/
+├── cartridge.ts    # CartridgeController class (click detection, animation)
+└── handheld.ts     # Added createFullCartridge() function
+```
+
+### createFullCartridge() Function
+Creates a standalone full cartridge model (not the partial one visible in the slot):
+
+```typescript
+export function createFullCartridge(): THREE.Group
+```
+
+**Cartridge Geometry Orientation:**
+The cartridge uses the same geometry orientation as the original `createCartridge()`:
+- RoundedBoxGeometry(cartWidth, cartDepth, fullCartHeight) - width=X, depth=Y, height=Z
+- The "thin" dimension is Y (cartDepth), the "wide" faces are X-Z planes
+- Label goes on the Y- face (bottom in local coords), rotated to face outward
+
+**Cartridge Dimensions:**
+- Body: RoundedBoxGeometry(cartWidth, cartDepth, fullCartHeight)
+  - cartWidth = slotWidth - 0.05 (wide dimension)
+  - cartDepth = slotDepth - 0.02 (thin dimension - thickness)
+  - fullCartHeight = visibleHeight * 1.8 (length along Z axis)
+  - visibleHeight = slotHeight + 0.15
+- Label: PlaneGeometry on Y- face (the thin face), positioned at top of cartridge (Z+)
+- Connector: Gold metallic strip at Z- end (bottom when inserted)
+- Notch: Dark grip notch at Z+ end (top when inserted)
+
+**Label Positioning (matching original createCartridge):**
+- Position: (0, -cartDepth/2 - 0.01, fullCartHeight/2 - visibleHeight/2)
+- Rotation: x = -π/2, z = π
+- This places the label on the bottom face (Y-) at the upper portion of the cartridge
+
+**Important Orientation Notes:**
+- Initial rotation: (π, 0, 0) - label facing camera when ejected
+- Final rotation: (π, 0, π) - 180° Z rotation so label faces correctly when inserted
+- Rotation happens during Phase 1 (sideways movement), not Phase 2
+
+### CartridgeController Class
+Manages cartridge state and animation:
+
+```typescript
+export type CartridgeState = 'ejected' | 'moving_to_slot' | 'inserting' | 'inserted';
+
+export class CartridgeController {
+  constructor(cartridge: THREE.Group, slotPosition: THREE.Vector3)
+  setOnInsertComplete(callback: () => void): void
+  getState(): CartridgeState
+  handleClick(event: MouseEvent, camera: THREE.Camera, scene: THREE.Scene): boolean
+  update(dt: number): void
+  getCartridge(): THREE.Group
+}
+```
+
+**Animation Details:**
+Two-phase animation with rotation during Phase 1:
+
+Phase 1 - Move to above slot (with rotation):
+- Start position: (5.0, 0.5, 2.0) - in line with handheld, to the right
+- End position: (0, 0.5, -5.0) - above the top of handheld (lower Z value)
+- Start rotation: (π, 0, 0) - label facing camera
+- End rotation: (π, 0, π) - 180° Z rotation for correct inserted orientation
+- Duration: ~833ms (progress += dt * 0.0012)
+
+Phase 2 - Insert into slot (no rotation):
+- Start position: (0, 0.5, -5.0) - above slot
+- End position: Slot position (0, slotDepth/2, -3.0 + 0.35)
+- Rotation: (π, 0, π) throughout (no rotation change)
+- Duration: ~667ms (progress += dt * 0.0015)
+- Easing: easeInOutCubic for both phases
+
+### App Integration
+In `app.ts`:
+
+```typescript
+// Create handheld without cartridge
+this.handheld = createHandheld(false);
+
+// Create full cartridge separately
+const cartridge = createFullCartridge();
+const slotPosition = new THREE.Vector3(0, 0.28 / 2, -3.0 + 0.35);
+this.cartridgeController = new CartridgeController(cartridge, slotPosition);
+this.scene.add(this.cartridgeController.getCartridge());
+
+// Game only starts after insertion
+this.cartridgeController.setOnInsertComplete(() => {
+  this.gameStarted = true;
+});
+
+// Click handler for cartridge
+window.addEventListener('click', this.onClick.bind(this));
+```
+
+### Common Issues & Fixes
+
+**Issue: Cartridge clips into handheld when ejected**
+- Fix: Position cartridge further away (5.0, 2.0, 2.0 instead of closer positions)
+
+**Issue: Cartridge oriented wrong way (thin edge facing camera instead of label)**
+- Fix: Use correct rotation values:
+  - Initial rotation: (π, 0, 0) - label faces camera when ejected
+  - Final rotation: (π, 0, π) - 180° Z rotation for correct inserted orientation
+  - Rotate during Phase 1 (sideways movement), not Phase 2
+
+**Issue: Label shows as gray rectangle instead of BRICKDROP design**
+- Fix: Label must be positioned on the correct face matching original:
+  - Position: (0, -cartDepth/2 - 0.01, fullCartHeight/2 - visibleHeight/2)
+  - Rotation: x = -π/2, z = π
+  - The label is on the Y- face (bottom in local coords), at the top portion of the cartridge
+
+**Issue: Cartridge too long**
+- Fix: Use fullCartHeight = visibleHeight * 1.8 (not 2.2)
+
+**Issue: Game starts immediately instead of waiting for cartridge**
+- Fix: Use `gameStarted` boolean flag, only process game input when true
+
+---
+
+## 14. Debug Axis Arrows
+
+For spatial communication during development, axis arrows can be displayed:
+
+```typescript
+export function createAxisArrows(scene: THREE.Scene): void
+```
+
+- X-axis: Red arrow pointing in +X direction
+- Y-axis: Green arrow pointing in +Y direction  
+- Z-axis: Blue arrow pointing in +Z direction
+- Arrow length: 1.5 units
+- Positioned at origin (0, 0, 0)
+
+Usage in app.ts:
+```typescript
+import { createAxisArrows } from './scene/setup';
+createAxisArrows(this.scene);
+```
+
+Remove or comment out when not needed for production.
+
+---
+
 ## Summary Checklist for Agents
 
 - [ ] Use `import type` for all type-only imports

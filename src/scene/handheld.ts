@@ -26,7 +26,7 @@ export interface HandheldParts {
   buttons: ButtonMeshes;
 }
 
-export function createHandheld(): HandheldParts {
+export function createHandheld(withCartridge: boolean = true): HandheldParts {
   const group = new THREE.Group();
 
   createHousing(group);
@@ -39,9 +39,162 @@ export function createHandheld(): HandheldParts {
   createSpeakerGrille(group);
   createBranding(group);
   createBackDetails(group);
-  createCartridge(group);
+  
+  if (withCartridge) {
+    createCartridge(group);
+  }
 
   return { group, screen, buttons };
+}
+
+export function createFullCartridge(): THREE.Group {
+  const group = new THREE.Group();
+  
+  const slotWidth = 4.5 * 0.7;
+  const slotHeight = 6.0 * 0.15;
+  const slotDepth = 0.8 * 0.35;
+
+  const cartWidth = slotWidth - 0.05;
+  const cartDepth = slotDepth - 0.02;
+  const visibleHeight = slotHeight + 0.15;
+  const fullCartHeight = visibleHeight * 1.8;
+
+  const cartMaterial = new THREE.MeshStandardMaterial({
+    color: 0x2D2D2D,
+    roughness: 0.6,
+    metalness: 0.1,
+  });
+
+  const cartBody = new THREE.Mesh(
+    new RoundedBoxGeometry(cartWidth, cartDepth, fullCartHeight, 2, 0.03),
+    cartMaterial
+  );
+  cartBody.castShadow = true;
+  cartBody.receiveShadow = true;
+  group.add(cartBody);
+
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 512;
+  labelCanvas.height = 128;
+  const ctx = labelCanvas.getContext('2d')!;
+
+  ctx.fillStyle = '#7B3FA0';
+  ctx.fillRect(0, 0, 512, 128);
+
+  const blockColors: Record<string, string> = {
+    I: '#00F0F0',
+    O: '#F0F000',
+    T: '#A000F0',
+    S: '#00F000',
+    Z: '#F00000',
+    J: '#0000F0',
+    L: '#F0A000',
+  };
+
+  const blockSize = 8;
+  
+  function drawBlock(x: number, y: number, color: string) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, blockSize - 1, blockSize - 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillRect(x, y, blockSize - 1, 2);
+    ctx.fillRect(x, y, 2, blockSize - 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(x + blockSize - 3, y + 2, 2, blockSize - 3);
+    ctx.fillRect(x + 2, y + blockSize - 3, blockSize - 3, 2);
+  }
+
+  function drawTetromino(x: number, y: number, shape: number[][], color: string) {
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (shape[row][col]) {
+          drawBlock(x + col * blockSize, y + row * blockSize, color);
+        }
+      }
+    }
+  }
+
+  const I = [[1,1,1,1]];
+  const O = [[1,1],[1,1]];
+  const T = [[1,1,1],[0,1,0]];
+  const S = [[0,1,1],[1,1,0]];
+  const Z = [[1,1,0],[0,1,1]];
+  const J = [[1,0,0],[1,1,1]];
+  const L = [[0,0,1],[1,1,1]];
+
+  ctx.font = 'bold 42px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const text = 'BRICKDROP';
+  const textY = 64;
+  ctx.fillStyle = '#FFD700';
+  ctx.fillText(text, 256, textY);
+
+  const textMetrics = ctx.measureText(text);
+  const textLeft = 256 - textMetrics.width / 2;
+  const textRight = 256 + textMetrics.width / 2;
+  const textTop = textY - 21;
+  const textBottom = textY + 21;
+
+  drawTetromino(textLeft - 40, textTop - 20, T, blockColors.T);
+  drawTetromino(textRight + 10, textTop - 15, L, blockColors.L);
+  drawTetromino(textLeft - 45, textBottom + 5, J, blockColors.J);
+  drawTetromino(textRight + 15, textBottom + 8, S, blockColors.S);
+  drawTetromino(30, textY - 10, Z, blockColors.Z);
+  drawTetromino(470, textY - 5, O, blockColors.O);
+  drawTetromino(150, textBottom + 10, I, blockColors.I);
+
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'right';
+  ctx.fillText('A3', 492, 115);
+
+  ctx.font = 'bold 12px Arial';
+  ctx.fillStyle = '#CCCCCC';
+  ctx.fillText('®', 502, 110);
+
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const labelMaterial = new THREE.MeshStandardMaterial({
+    map: labelTexture,
+    roughness: 0.5,
+  });
+
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(cartWidth - 0.1, visibleHeight - 0.1),
+    labelMaterial
+  );
+  label.position.set(0, -cartDepth / 2 - 0.01, fullCartHeight / 2 - visibleHeight / 2);
+  label.rotation.x = -Math.PI / 2;
+  label.rotation.z = Math.PI;
+  group.add(label);
+
+  const connectorMaterial = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37,
+    roughness: 0.3,
+    metalness: 0.8,
+  });
+  
+  const connector = new THREE.Mesh(
+    new THREE.BoxGeometry(cartWidth * 0.7, 0.08, 0.15),
+    connectorMaterial
+  );
+  connector.position.set(0, 0, -fullCartHeight / 2 + 0.1);
+  group.add(connector);
+
+  const notchMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    roughness: 0.9,
+  });
+  
+  const notch = new THREE.Mesh(
+    new THREE.BoxGeometry(cartWidth * 0.3, cartDepth * 0.6, 0.08),
+    notchMaterial
+  );
+  notch.position.set(0, 0, fullCartHeight / 2 - 0.1);
+  group.add(notch);
+
+  return group;
 }
 
 function createHousing(group: THREE.Group): void {

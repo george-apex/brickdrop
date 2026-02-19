@@ -58,3 +58,40 @@ export function createLights(scene: THREE.Scene): void {
   const ambient = new THREE.AmbientLight(0xffffff, 0.3);
   scene.add(ambient);
 }
+
+export function createAxisArrows(scene: THREE.Scene): void {
+  const arrowLength = 1.5;
+  const arrowHeadLength = 0.3;
+  const arrowHeadWidth = 0.15;
+  const origin = new THREE.Vector3(0, 0, 0);
+
+  const xAxis = new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0),
+    origin,
+    arrowLength,
+    0xff0000,
+    arrowHeadLength,
+    arrowHeadWidth
+  );
+  scene.add(xAxis);
+
+  const yAxis = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0),
+    origin,
+    arrowLength,
+    0x00ff00,
+    arrowHeadLength,
+    arrowHeadWidth
+  );
+  scene.add(yAxis);
+
+  const zAxis = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 0, 1),
+    origin,
+    arrowLength,
+    0x0000ff,
+    arrowHeadLength,
+    arrowHeadWidth
+  );
+  scene.add(zAxis);
+}

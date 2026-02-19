@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { createRenderer, createCamera, createScene, createControls, createLights } from './scene/setup';
-import { createHandheld } from './scene/handheld';
+import { createRenderer, createCamera, createScene, createControls, createLights, createAxisArrows } from './scene/setup';
+import { createHandheld, createFullCartridge } from './scene/handheld';
 import type { HandheldParts } from './scene/handheld';
 import { ButtonController } from './scene/buttons';
+import { CartridgeController } from './scene/cartridge';
 import { GameEngine } from './game/engine';
 import { GameRenderer } from './game/renderer';
 import { InputHandler } from './input/keyboard';
@@ -15,11 +16,13 @@ export class App {
   private controls: ReturnType<typeof createControls>;
   private handheld: HandheldParts;
   private buttonController!: ButtonController;
+  private cartridgeController: CartridgeController;
   private gameEngine: GameEngine;
   private gameRenderer: GameRenderer;
   private inputHandler: InputHandler;
   private screenTexture: THREE.CanvasTexture;
   private lastTime: number = 0;
+  private gameStarted: boolean = false;
   
   constructor() {
     this.renderer = createRenderer();
@@ -30,9 +33,15 @@ export class App {
     this.controls = createControls(this.camera, this.renderer.domElement);
     
     createLights(this.scene);
+    createAxisArrows(this.scene);
     
-    this.handheld = createHandheld();
+    this.handheld = createHandheld(false);
     this.scene.add(this.handheld.group);
+    
+    const cartridge = createFullCartridge();
+    const slotPosition = new THREE.Vector3(0, 0.28 / 2, -3.0 + 0.35);
+    this.cartridgeController = new CartridgeController(cartridge, slotPosition);
+    this.scene.add(this.cartridgeController.getCartridge());
     
     this.gameEngine = new GameEngine();
     this.gameRenderer = new GameRenderer();
@@ -45,20 +54,33 @@ export class App {
     screenMaterial.emissiveMap = this.screenTexture;
     
     const onAction: ActionCallback = (action) => {
-      this.gameEngine.handleAction(action);
-      this.buttonController.setPressed(action, true);
+      if (this.gameStarted) {
+        this.gameEngine.handleAction(action);
+        this.buttonController.setPressed(action, true);
+      }
     };
     
     const onActionRelease: ActionReleaseCallback = (action) => {
-      this.gameEngine.handleActionRelease(action);
-      this.buttonController.setPressed(action, false);
+      if (this.gameStarted) {
+        this.gameEngine.handleActionRelease(action);
+        this.buttonController.setPressed(action, false);
+      }
     };
     
     this.buttonController = new ButtonController(this.handheld.buttons);
     this.inputHandler = new InputHandler(onAction, onActionRelease);
     this.inputHandler.attach();
     
+    this.cartridgeController.setOnInsertComplete(() => {
+      this.gameStarted = true;
+    });
+    
     window.addEventListener('resize', this.onResize.bind(this));
+    window.addEventListener('click', this.onClick.bind(this));
+  }
+  
+  private onClick(event: MouseEvent): void {
+    this.cartridgeController.handleClick(event, this.camera, this.scene);
   }
   
   private onResize(): void {
@@ -81,13 +103,17 @@ export class App {
     
     this.controls.update();
     
-    this.inputHandler.update(dt);
-    this.gameEngine.update(dt);
+    this.cartridgeController.update(dt);
     
-    this.gameRenderer.render(this.gameEngine.state, this.gameEngine.getGhostY());
-    this.screenTexture.needsUpdate = true;
-    
-    this.buttonController.update();
+    if (this.gameStarted) {
+      this.inputHandler.update(dt);
+      this.gameEngine.update(dt);
+      
+      this.gameRenderer.render(this.gameEngine.state, this.gameEngine.getGhostY());
+      this.screenTexture.needsUpdate = true;
+      
+      this.buttonController.update();
+    }
     
     this.renderer.render(this.scene, this.camera);
   };
