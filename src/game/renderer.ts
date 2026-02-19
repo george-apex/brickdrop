@@ -41,11 +41,13 @@ export class GameRenderer {
     this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
     const asciiLines = [
-      "    /\\    _____",
-      "   /  \\   |__  |",
-      "  / /\\ \\     ) |",
-      " / ____ \\  /__/ |",
-      "/_/    \\_\\ |___/",
+      "      __       _______  ",
+      "     /\"\"\\     /\" __   ) ",
+      "    /    \\   (__/ _) ./ ",
+      "   /' /\\  \\      /  //  ",
+      "  //  __'  \\  __ \\_ \\\\  ",
+      " /   /  \\\\  \\(: \\__) :\\ ",
+      "(___/    \\___)\\_______)",
     ];
     
     const lineHeight = 24;
@@ -53,8 +55,8 @@ export class GameRenderer {
     const charWidth = 12;
     
     const totalChars = asciiLines.reduce((sum, line) => sum + line.length, 0);
-    const slideInEnd = 0.7;
-    const fadeOutStart = 0.8;
+    const slideInEnd = 0.5;
+    const fadeOutStart = 0.75;
     
     let alpha = 1;
     if (progress > fadeOutStart) {
@@ -73,14 +75,16 @@ export class GameRenderer {
       for (let colIdx = 0; colIdx < line.length; colIdx++) {
         const char = line[colIdx];
         const charProgress = charIndex / totalChars;
+        const charAppearTime = charProgress * slideInEnd;
         
-        if (charProgress < progress / slideInEnd) {
-          const slideOffset = Math.max(0, (progress - charProgress * slideInEnd) * 200 - 100);
-          const x = CANVAS_WIDTH / 2 - (line.length * charWidth) / 2 + colIdx * charWidth - slideOffset;
+        if (progress > charAppearTime) {
+          const timeSinceAppear = progress - charAppearTime;
+          const slideAmount = Math.max(0, 1 - timeSinceAppear * 8);
+          const baseX = CANVAS_WIDTH / 2 - (line.length * charWidth) / 2 + colIdx * charWidth;
+          const x = baseX - slideAmount * 150;
           
-          if (x > -charWidth && x < CANVAS_WIDTH) {
-            const charAlpha = Math.min(1, (CANVAS_WIDTH / 2 - x) / 50);
-            this.ctx.fillStyle = `rgba(155, 89, 182, ${alpha * charAlpha})`;
+          if (x > -charWidth && x < CANVAS_WIDTH + charWidth) {
+            this.ctx.fillStyle = `rgba(155, 89, 182, ${alpha})`;
             this.ctx.fillText(char, x, y);
           }
         }

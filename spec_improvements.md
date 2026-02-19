@@ -710,14 +710,16 @@ private setPowerLightGreen(): void {
 
 ### ASCII A3 Logo
 
-The startup animation displays an ASCII art "A3" logo:
+The startup animation displays an ASCII art "A3" logo in fancy script style:
 
 ```
-    /\    _____
-   /  \   |__  |
-  / /\ \     ) |
- / ____ \  /__/ |
-/_/    \_\ |___/
+      __       _______  
+     /""\     /" __   ) 
+    /    \   (__/ _) ./ 
+   /' /\  \      /  //  
+  //  __'  \  __ \_ \\  
+ /   /  \\  \(: \__) :\ 
+(___/    \___)\_______)
 ```
 
 ### renderStartup() Method
