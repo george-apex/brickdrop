@@ -24,6 +24,7 @@ export interface HandheldParts {
   group: THREE.Group;
   screen: THREE.Mesh;
   buttons: ButtonMeshes;
+  powerLight: THREE.Mesh;
 }
 
 export function createHandheld(withCartridge: boolean = true): HandheldParts {
@@ -37,14 +38,14 @@ export function createHandheld(withCartridge: boolean = true): HandheldParts {
   const buttons = createButtons(group);
 
   createSpeakerGrille(group);
-  createBranding(group);
+  const powerLight = createBranding(group);
   createBackDetails(group);
   
   if (withCartridge) {
     createCartridge(group);
   }
 
-  return { group, screen, buttons };
+  return { group, screen, buttons, powerLight };
 }
 
 export function createFullCartridge(): THREE.Group {
@@ -480,12 +481,12 @@ function createSpeakerGrille(group: THREE.Group): void {
   }
 }
 
-function createBranding(group: THREE.Group): void {
+function createBranding(group: THREE.Group): THREE.Mesh {
   const powerLight = new THREE.Mesh(
     new THREE.SphereGeometry(0.04, 16, 16),
     new THREE.MeshStandardMaterial({
-      color: 0x00FF00,
-      emissive: 0x00FF00,
+      color: 0xFF0000,
+      emissive: 0xFF0000,
       emissiveIntensity: 0.5,
     })
   );
@@ -523,6 +524,8 @@ function createBranding(group: THREE.Group): void {
   logo.rotation.x = -Math.PI / 2;
   logo.position.set(-1.35, 0.83, -0.1);
   group.add(logo);
+
+  return powerLight;
 }
 
 function createBackDetails(group: THREE.Group): void {

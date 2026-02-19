@@ -669,6 +669,125 @@ Remove or comment out when not needed for production.
 
 ---
 
+## 15. Startup Animation Sequence
+
+### Overview
+When the app loads, the handheld is "off" with a red power light and black screen. After inserting the cartridge, a startup animation plays before the game begins.
+
+### App State Machine
+
+```typescript
+type AppState = 'off' | 'startup' | 'game';
+```
+
+- **off**: Screen black, power light red, waiting for cartridge insertion
+- **startup**: Cartridge inserted, ASCII logo animation playing
+- **game**: Normal gameplay, power light green
+
+### Power Light Control
+
+The power light is returned from `createHandheld()` and can be controlled:
+
+```typescript
+export interface HandheldParts {
+  group: THREE.Group;
+  screen: THREE.Mesh;
+  buttons: ButtonMeshes;
+  powerLight: THREE.Mesh;  // Accessible for color changes
+}
+```
+
+**Initial state**: Red (0xFF0000)
+**After startup**: Green (0x00FF00)
+
+```typescript
+private setPowerLightGreen(): void {
+  const material = this.handheld.powerLight.material as THREE.MeshStandardMaterial;
+  material.color.setHex(0x00FF00);
+  material.emissive.setHex(0x00FF00);
+}
+```
+
+### ASCII A3 Logo
+
+The startup animation displays an ASCII art "A3" logo:
+
+```
+    /\    _____
+   /  \   |__  |
+  / /\ \     ) |
+ / ____ \  /__/ |
+/_/    \_\ |___/
+```
+
+### renderStartup() Method
+
+In `GameRenderer`:
+
+```typescript
+renderStartup(progress: number): void
+```
+
+**Progress phases:**
+- 0% - 70%: Characters slide in from left, one at a time
+- 70% - 80%: Full logo visible (hold)
+- 80% - 100%: Logo fades out
+
+**Animation details:**
+- Each character appears based on its position in the total character count
+- Characters slide from off-screen left to their final position
+- Purple color (RGB: 155, 89, 182) for the ASCII art
+- Monospace font, 20px size
+- Centered on the 320x288 canvas
+
+### Timing
+
+```typescript
+private startupDuration: number = 2500;  // 2.5 seconds total
+```
+
+In the animation loop:
+```typescript
+if (this.appState === 'startup') {
+  this.startupProgress += dt / this.startupDuration;
+  
+  if (this.startupProgress >= 1) {
+    this.appState = 'game';
+    this.setPowerLightGreen();
+    this.gameEngine.start();
+  }
+  
+  this.gameRenderer.renderStartup(this.startupProgress);
+  this.screenTexture.needsUpdate = true;
+}
+```
+
+### Sequence Flow
+
+```
+App loads
+    ↓
+State: 'off' (screen black, power light red)
+    ↓
+User clicks cartridge
+    ↓
+Cartridge insertion animation plays
+    ↓
+On insert complete → State: 'startup'
+    ↓
+ASCII A3 logo slides in from left
+    ↓
+Logo fades out
+    ↓
+Power light turns green
+    ↓
+State: 'game' → GameEngine.start()
+    ↓
+Normal gameplay begins
+```
+
+---
+
 ## Summary Checklist for Agents
 
 - [ ] Use `import type` for all type-only imports

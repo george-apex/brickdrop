@@ -36,6 +36,60 @@ export class GameRenderer {
     return this.canvas;
   }
   
+  renderStartup(progress: number): void {
+    this.ctx.fillStyle = '#000000';
+    this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    const asciiLines = [
+      "    /\\    _____",
+      "   /  \\   |__  |",
+      "  / /\\ \\     ) |",
+      " / ____ \\  /__/ |",
+      "/_/    \\_\\ |___/",
+    ];
+    
+    const lineHeight = 24;
+    const startY = (CANVAS_HEIGHT - asciiLines.length * lineHeight) / 2;
+    const charWidth = 12;
+    
+    const totalChars = asciiLines.reduce((sum, line) => sum + line.length, 0);
+    const slideInEnd = 0.7;
+    const fadeOutStart = 0.8;
+    
+    let alpha = 1;
+    if (progress > fadeOutStart) {
+      alpha = 1 - (progress - fadeOutStart) / (1 - fadeOutStart);
+    }
+    
+    this.ctx.font = 'bold 20px monospace';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'top';
+    
+    let charIndex = 0;
+    for (let lineIdx = 0; lineIdx < asciiLines.length; lineIdx++) {
+      const line = asciiLines[lineIdx];
+      const y = startY + lineIdx * lineHeight;
+      
+      for (let colIdx = 0; colIdx < line.length; colIdx++) {
+        const char = line[colIdx];
+        const charProgress = charIndex / totalChars;
+        
+        if (charProgress < progress / slideInEnd) {
+          const slideOffset = Math.max(0, (progress - charProgress * slideInEnd) * 200 - 100);
+          const x = CANVAS_WIDTH / 2 - (line.length * charWidth) / 2 + colIdx * charWidth - slideOffset;
+          
+          if (x > -charWidth && x < CANVAS_WIDTH) {
+            const charAlpha = Math.min(1, (CANVAS_WIDTH / 2 - x) / 50);
+            this.ctx.fillStyle = `rgba(155, 89, 182, ${alpha * charAlpha})`;
+            this.ctx.fillText(char, x, y);
+          }
+        }
+        
+        charIndex++;
+      }
+    }
+  }
+  
   render(state: GameState, ghostY: number): void {
     this.ctx.fillStyle = COLORS.empty;
     this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);

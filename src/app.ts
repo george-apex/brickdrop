@@ -9,6 +9,8 @@ import { GameRenderer } from './game/renderer';
 import { InputHandler } from './input/keyboard';
 import type { ActionCallback, ActionReleaseCallback } from './input/keyboard';
 
+type AppState = 'off' | 'startup' | 'game';
+
 export class App {
   private renderer: THREE.WebGLRenderer;
   private camera: THREE.PerspectiveCamera;
@@ -22,7 +24,9 @@ export class App {
   private inputHandler: InputHandler;
   private screenTexture: THREE.CanvasTexture;
   private lastTime: number = 0;
-  private gameStarted: boolean = false;
+  private appState: AppState = 'off';
+  private startupProgress: number = 0;
+  private startupDuration: number = 2500;
   
   constructor() {
     this.renderer = createRenderer();
@@ -54,14 +58,14 @@ export class App {
     screenMaterial.emissiveMap = this.screenTexture;
     
     const onAction: ActionCallback = (action) => {
-      if (this.gameStarted) {
+      if (this.appState === 'game') {
         this.gameEngine.handleAction(action);
         this.buttonController.setPressed(action, true);
       }
     };
     
     const onActionRelease: ActionReleaseCallback = (action) => {
-      if (this.gameStarted) {
+      if (this.appState === 'game') {
         this.gameEngine.handleActionRelease(action);
         this.buttonController.setPressed(action, false);
       }
@@ -72,7 +76,7 @@ export class App {
     this.inputHandler.attach();
     
     this.cartridgeController.setOnInsertComplete(() => {
-      this.gameStarted = true;
+      this.appState = 'startup';
     });
     
     window.addEventListener('resize', this.onResize.bind(this));
@@ -105,7 +109,18 @@ export class App {
     
     this.cartridgeController.update(dt);
     
-    if (this.gameStarted) {
+    if (this.appState === 'startup') {
+      this.startupProgress += dt / this.startupDuration;
+      
+      if (this.startupProgress >= 1) {
+        this.appState = 'game';
+        this.setPowerLightGreen();
+        this.gameEngine.start();
+      }
+      
+      this.gameRenderer.renderStartup(this.startupProgress);
+      this.screenTexture.needsUpdate = true;
+    } else if (this.appState === 'game') {
       this.inputHandler.update(dt);
       this.gameEngine.update(dt);
       
@@ -117,4 +132,10 @@ export class App {
     
     this.renderer.render(this.scene, this.camera);
   };
+  
+  private setPowerLightGreen(): void {
+    const material = this.handheld.powerLight.material as THREE.MeshStandardMaterial;
+    material.color.setHex(0x00FF00);
+    material.emissive.setHex(0x00FF00);
+  }
 }
