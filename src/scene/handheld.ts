@@ -37,6 +37,8 @@ export function createHandheld(): HandheldParts {
 
   createSpeakerGrille(group);
   createBranding(group);
+  createBackDetails(group);
+  createCartridgeSlot(group);
 
   return { group, screen, buttons };
 }
@@ -306,4 +308,132 @@ function createBranding(group: THREE.Group): void {
   logo.rotation.x = -Math.PI / 2;
   logo.position.set(-1.35, 0.83, -0.1);
   group.add(logo);
+}
+
+function createBackDetails(group: THREE.Group): void {
+  const batteryCoverMaterial = new THREE.MeshStandardMaterial({
+    color: 0xB8B8B8,
+    roughness: 0.8,
+    metalness: 0.1,
+  });
+
+  const batteryCover = new THREE.Mesh(
+    new RoundedBoxGeometry(2.8, 0.06, 1.8, 2, 0.08),
+    batteryCoverMaterial
+  );
+  batteryCover.position.set(0, -0.03, 1.0);
+  batteryCover.receiveShadow = true;
+  group.add(batteryCover);
+
+  const grooveMaterial = new THREE.MeshStandardMaterial({
+    color: 0x999999,
+    roughness: 0.9,
+  });
+
+  for (let i = 0; i < 8; i++) {
+    const groove = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 0.02, 0.02),
+      grooveMaterial
+    );
+    groove.position.set(0, 0.0, 0.3 + i * 0.18);
+    group.add(groove);
+  }
+
+  const notch = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.04, 0.1),
+    grooveMaterial
+  );
+  notch.position.set(0, 0.0, 0.12);
+  group.add(notch);
+}
+
+function createCartridgeSlot(group: THREE.Group): void {
+  const slotMaterial = new THREE.MeshStandardMaterial({
+    color: 0x3A3A3A,
+    roughness: 0.7,
+    metalness: 0.2,
+  });
+
+  const slotBase = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 0.1, 0.8),
+    slotMaterial
+  );
+  slotBase.position.set(0, 0.85, -2.7);
+  group.add(slotBase);
+
+  const slotOpening = new THREE.Mesh(
+    new THREE.BoxGeometry(1.4, 0.12, 0.5),
+    new THREE.MeshStandardMaterial({
+      color: 0x1A1A1A,
+      roughness: 0.9,
+    })
+  );
+  slotOpening.position.set(0, 0.86, -2.7);
+  group.add(slotOpening);
+
+  const cartridge = createCartridge();
+  cartridge.position.set(0, 0.95, -2.7);
+  group.add(cartridge);
+}
+
+function createCartridge(): THREE.Group {
+  const cartridgeGroup = new THREE.Group();
+
+  const cartMaterial = new THREE.MeshStandardMaterial({
+    color: 0x2D2D2D,
+    roughness: 0.6,
+    metalness: 0.1,
+  });
+
+  const cartBody = new THREE.Mesh(
+    new RoundedBoxGeometry(1.3, 0.35, 0.45, 2, 0.05),
+    cartMaterial
+  );
+  cartridgeGroup.add(cartBody);
+
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 256;
+  labelCanvas.height = 64;
+  const ctx = labelCanvas.getContext('2d')!;
+  
+  ctx.fillStyle = '#7B3FA0';
+  ctx.fillRect(0, 0, 256, 64);
+  
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('BRICKDROP', 128, 32);
+
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const labelTexturedMaterial = new THREE.MeshStandardMaterial({
+    map: labelTexture,
+    roughness: 0.5,
+  });
+
+  const labelTextured = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.1, 0.25),
+    labelTexturedMaterial
+  );
+  labelTextured.position.set(0, 0.18, 0);
+  labelTextured.rotation.x = -Math.PI / 2;
+  cartridgeGroup.add(labelTextured);
+
+  const gripMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1A1A1A,
+    roughness: 0.9,
+  });
+
+  for (let i = 0; i < 3; i++) {
+    const grip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, 0.02, 0.02),
+      gripMaterial
+    );
+    grip.position.set(0, -0.12, 0.15 - i * 0.08);
+    cartridgeGroup.add(grip);
+  }
+
+  cartridgeGroup.rotation.x = Math.PI / 12;
+
+  return cartridgeGroup;
 }

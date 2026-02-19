@@ -336,6 +336,24 @@ All elements positioned relative to housing base (Y=0.4):
 - Position: (-1.35, 0.83, -0.1) - below screen on left side
 - Font: Bold 36px rounded sans-serif
 
+### Back Details (Battery Cover)
+- Battery cover: 2.8 x 0.06 x 1.8 units, slightly lighter gray (0xB8B8B8)
+- Position: (0, -0.03, 1.0) - on back of housing
+- 8 horizontal grip grooves for texture
+- Removal notch at top of cover
+
+### Cartridge Slot (Top of Device)
+- Slot base: 1.8 x 0.1 x 0.8 units, dark gray (0x3A3A3A)
+- Slot opening: 1.4 x 0.12 x 0.5 units, black interior
+- Position: (0, 0.85, -2.7) - top center of device
+
+### BRICKDROP Cartridge
+- Body: 1.3 x 0.35 x 0.45 units, dark gray (0x2D2D2D)
+- Label: Purple background (0x7B3FA0) with "BRICKDROP" text
+- 3 grip lines on back for finger grip
+- Tilted at 15° (π/12) to appear inserted
+- Position: (0, 0.95, -2.7) - protruding from slot
+
 ### Button Mapping to 3D Buttons
 ```typescript
 Action.MOVE_LEFT  -> dpadLeft
