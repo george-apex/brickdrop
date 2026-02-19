@@ -436,20 +436,23 @@ function createCartridge(group: THREE.Group): void {
   ctx.textBaseline = 'middle';
   
   const text = 'BRICKDROP';
-  const textWidth = ctx.measureText(text).width;
-  let currentX = (512 - textWidth) / 2;
-  const textY = 55;
-
+  const textY = 64;
   ctx.fillStyle = '#FFD700';
   ctx.fillText(text, 256, textY);
 
-  drawTetromino(currentX - 35, textY - 20, T, blockColors.T);
-  drawTetromino(currentX + 50, textY - 15, L, blockColors.L);
-  drawTetromino(currentX + 130, textY - 18, I, blockColors.I);
-  drawTetromino(currentX + 200, textY - 15, S, blockColors.S);
-  drawTetromino(currentX + 280, textY - 18, Z, blockColors.Z);
-  drawTetromino(currentX + 350, textY - 15, J, blockColors.J);
-  drawTetromino(currentX + 420, textY - 18, O, blockColors.O);
+  const textMetrics = ctx.measureText(text);
+  const textLeft = 256 - textMetrics.width / 2;
+  const textRight = 256 + textMetrics.width / 2;
+  const textTop = textY - 21;
+  const textBottom = textY + 21;
+
+  drawTetromino(textLeft - 40, textTop - 20, T, blockColors.T);
+  drawTetromino(textRight + 10, textTop - 15, L, blockColors.L);
+  drawTetromino(textLeft - 45, textBottom + 5, J, blockColors.J);
+  drawTetromino(textRight + 15, textBottom + 8, S, blockColors.S);
+  drawTetromino(30, textY - 10, Z, blockColors.Z);
+  drawTetromino(470, textY - 5, O, blockColors.O);
+  drawTetromino(150, textBottom + 10, I, blockColors.I);
 
   ctx.font = 'bold 18px Arial';
   ctx.fillStyle = '#FFFFFF';
