@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 const HOUSING_COLOR = 0xC4C4C4;
 const SCREEN_BEZEL_COLOR = 0x4A5568;
@@ -48,64 +49,77 @@ function createHousing(group: THREE.Group): void {
   });
 
   const base = new THREE.Mesh(
-    new THREE.BoxGeometry(5.0, 0.7, 6.0),
+    new RoundedBoxGeometry(4.5, 0.8, 6.0, 4, 0.15),
     housingMaterial
   );
-  base.position.y = 0.35;
+  base.position.y = 0.4;
   base.castShadow = true;
   base.receiveShadow = true;
   group.add(base);
 
-  const bezelMaterial = new THREE.MeshStandardMaterial({
+  const bezelThickness = 0.15;
+  const bezelHeight = 0.15;
+  const screenWellWidth = 3.2;
+  const screenWellDepth = 2.3;
+  const screenWellZ = -1.5;
+
+  const bezelFrame = createBezelFrame(screenWellWidth, screenWellDepth, bezelThickness, bezelHeight);
+  bezelFrame.position.set(0, 0.875, screenWellZ);
+  group.add(bezelFrame);
+
+  const wellFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(screenWellWidth, 0.05, screenWellDepth),
+    new THREE.MeshStandardMaterial({
+      color: SCREEN_BEZEL_COLOR,
+      roughness: 0.6,
+      metalness: 0.2,
+    })
+  );
+  wellFloor.position.set(0, 0.8, screenWellZ);
+  group.add(wellFloor);
+}
+
+function createBezelFrame(innerWidth: number, innerDepth: number, thickness: number, height: number): THREE.Mesh {
+  const outerWidth = innerWidth + thickness * 2;
+  const outerDepth = innerDepth + thickness * 2;
+  
+  const shape = new THREE.Shape();
+  const r = 0.05;
+  
+  shape.moveTo(-outerWidth / 2 + r, -outerDepth / 2);
+  shape.lineTo(outerWidth / 2 - r, -outerDepth / 2);
+  shape.quadraticCurveTo(outerWidth / 2, -outerDepth / 2, outerWidth / 2, -outerDepth / 2 + r);
+  shape.lineTo(outerWidth / 2, outerDepth / 2 - r);
+  shape.quadraticCurveTo(outerWidth / 2, outerDepth / 2, outerWidth / 2 - r, outerDepth / 2);
+  shape.lineTo(-outerWidth / 2 + r, outerDepth / 2);
+  shape.quadraticCurveTo(-outerWidth / 2, outerDepth / 2, -outerWidth / 2, outerDepth / 2 - r);
+  shape.lineTo(-outerWidth / 2, -outerDepth / 2 + r);
+  shape.quadraticCurveTo(-outerWidth / 2, -outerDepth / 2, -outerWidth / 2 + r, -outerDepth / 2);
+  
+  const hole = new THREE.Path();
+  hole.moveTo(-innerWidth / 2, -innerDepth / 2);
+  hole.lineTo(innerWidth / 2, -innerDepth / 2);
+  hole.lineTo(innerWidth / 2, innerDepth / 2);
+  hole.lineTo(-innerWidth / 2, innerDepth / 2);
+  hole.lineTo(-innerWidth / 2, -innerDepth / 2);
+  shape.holes.push(hole);
+  
+  const extrudeSettings = { depth: height, bevelEnabled: false };
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, -height / 2, 0);
+  
+  const material = new THREE.MeshStandardMaterial({
     color: SCREEN_BEZEL_COLOR,
     roughness: 0.6,
     metalness: 0.2,
   });
-
-  const bezelThickness = 0.15;
-  const bezelHeight = 0.2;
-  const screenWellWidth = 3.5;
-  const screenWellDepth = 2.3;
-  const screenWellZ = -1.8;
-
-  const topRail = new THREE.Mesh(
-    new THREE.BoxGeometry(screenWellWidth + bezelThickness * 2, bezelHeight, bezelThickness),
-    bezelMaterial
-  );
-  topRail.position.set(0, 0.8, screenWellZ - screenWellDepth / 2 - bezelThickness / 2);
-  group.add(topRail);
-
-  const bottomRail = new THREE.Mesh(
-    new THREE.BoxGeometry(screenWellWidth + bezelThickness * 2, bezelHeight, bezelThickness),
-    bezelMaterial
-  );
-  bottomRail.position.set(0, 0.8, screenWellZ + screenWellDepth / 2 + bezelThickness / 2);
-  group.add(bottomRail);
-
-  const leftRail = new THREE.Mesh(
-    new THREE.BoxGeometry(bezelThickness, bezelHeight, screenWellDepth),
-    bezelMaterial
-  );
-  leftRail.position.set(-screenWellWidth / 2 - bezelThickness / 2, 0.8, screenWellZ);
-  group.add(leftRail);
-
-  const rightRail = new THREE.Mesh(
-    new THREE.BoxGeometry(bezelThickness, bezelHeight, screenWellDepth),
-    bezelMaterial
-  );
-  rightRail.position.set(screenWellWidth / 2 + bezelThickness / 2, 0.8, screenWellZ);
-  group.add(rightRail);
-
-  const wellFloor = new THREE.Mesh(
-    new THREE.BoxGeometry(screenWellWidth, 0.05, screenWellDepth),
-    bezelMaterial
-  );
-  wellFloor.position.set(0, 0.725, screenWellZ);
-  group.add(wellFloor);
+  
+  return new THREE.Mesh(geometry, material);
 }
 
 function createScreen(): THREE.Mesh {
-  const geometry = new THREE.PlaneGeometry(3.0, 1.9);
+  const geometry = new THREE.PlaneGeometry(2.7, 1.9);
   const material = new THREE.MeshStandardMaterial({
     color: 0x000000,
     emissive: 0xffffff,
@@ -113,7 +127,7 @@ function createScreen(): THREE.Mesh {
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.rotation.x = -Math.PI / 2;
-  mesh.position.set(0, 0.76, -1.8);
+  mesh.position.set(0, 0.83, -1.5);
   return mesh;
 }
 
@@ -147,7 +161,7 @@ function createButtons(group: THREE.Group): ButtonMeshes {
   dpadGroup.add(buttons.dpadLeft);
   dpadGroup.add(buttons.dpadRight);
   dpadGroup.add(dpadCenter);
-  dpadGroup.position.set(-1.3, 0.78, 1.2);
+  dpadGroup.position.set(-1.17, 0.88, 1.2);
   group.add(dpadGroup);
 
   const abGroup = new THREE.Group();
@@ -158,13 +172,13 @@ function createButtons(group: THREE.Group): ButtonMeshes {
   abGroup.add(buttons.buttonA);
   abGroup.add(buttons.buttonB);
   abGroup.rotation.y = -Math.PI / 6;
-  abGroup.position.set(1.3, 0.78, 1.2);
+  abGroup.position.set(0.95, 0.88, 1.2);
   group.add(abGroup);
 
-  buttons.select.position.set(-0.35, 0.78, 2.2);
+  buttons.select.position.set(-0.32, 0.88, 2.2);
   group.add(buttons.select);
 
-  buttons.start.position.set(0.35, 0.78, 2.2);
+  buttons.start.position.set(0.32, 0.88, 2.2);
   group.add(buttons.start);
 
   return buttons;
@@ -225,24 +239,27 @@ function createSmallButton(): THREE.Mesh {
 }
 
 function createSpeakerGrille(group: THREE.Group): void {
-  const holeGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.05, 12);
-  const holeMaterial = new THREE.MeshStandardMaterial({
+  const grooveMaterial = new THREE.MeshStandardMaterial({
     color: 0x1a1a1a,
     roughness: 0.9,
   });
 
-  for (let row = 0; row < 6; row++) {
-    const offset = row % 2 === 0 ? 0 : 0.05;
-    for (let col = 0; col < 4; col++) {
-      const hole = new THREE.Mesh(holeGeometry, holeMaterial);
-      hole.position.set(
-        1.9 + col * 0.1 + offset,
-        0.73,
-        -2.5 + row * 0.1
-      );
-      hole.rotation.x = -Math.PI / 2;
-      group.add(hole);
-    }
+  const grooveWidth = 0.04;
+  const grooveLength = 0.4;
+  const spacing = 0.12;
+  
+  for (let i = 0; i < 6; i++) {
+    const groove = new THREE.Mesh(
+      new THREE.BoxGeometry(grooveWidth, 0.05, grooveLength),
+      grooveMaterial
+    );
+    groove.position.set(
+      1.44 + i * spacing,
+      0.83,
+      2.7 - i * spacing
+    );
+    groove.rotation.y = Math.PI / 4;
+    group.add(groove);
   }
 }
 
@@ -255,6 +272,38 @@ function createBranding(group: THREE.Group): void {
       emissiveIntensity: 0.5,
     })
   );
-  powerLight.position.set(-1.5, 0.73, -0.5);
+  powerLight.position.set(-1.35, 0.83, -0.5);
   group.add(powerLight);
+
+  const logoCanvas = document.createElement('canvas');
+  logoCanvas.width = 256;
+  logoCanvas.height = 64;
+  const ctx = logoCanvas.getContext('2d')!;
+  
+  ctx.save();
+  ctx.translate(128, 32);
+  ctx.transform(1, 0, -0.15, 1, 0, 0);
+  
+  ctx.font = 'bold 36px "Arial Rounded MT Bold", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  ctx.fillStyle = '#000000';
+  ctx.fillText('A3CODEBOY', 0, 0);
+  
+  ctx.restore();
+  
+  const logoTexture = new THREE.CanvasTexture(logoCanvas);
+  const logoMaterial = new THREE.MeshStandardMaterial({
+    map: logoTexture,
+    transparent: true,
+  });
+  
+  const logo = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.9, 0.22),
+    logoMaterial
+  );
+  logo.rotation.x = -Math.PI / 2;
+  logo.position.set(-1.35, 0.83, -0.1);
+  group.add(logo);
 }

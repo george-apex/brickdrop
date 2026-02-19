@@ -277,88 +277,64 @@ The handheld should resemble a classic Game Boy, not a generic block:
 ### Housing Construction
 The housing is built from multiple parts to create a recessed screen well:
 
-1. **Base**: 5.0 x 0.7 x 6.0 box at Y=0.35 (centered)
+1. **Base**: 4.5 x 0.8 x 6.0 box at Y=0.4 (centered)
 2. **Bezel Rails**: Four raised rails around the screen creating a well
-   - Top/Bottom rails: 3.8 x 0.2 x 0.15
-   - Left/Right rails: 0.15 x 0.2 x 2.3
-   - All positioned at Y=0.8
-3. **Well Floor**: 3.5 x 0.05 x 2.3 at Y=0.725 (dark bezel color)
+   - Top/Bottom rails: 3.5 x 0.15 x 0.15
+   - Left/Right rails: 0.15 x 0.15 x 2.3
+   - All positioned at Y=0.875
+3. **Well Floor**: 3.2 x 0.05 x 2.3 at Y=0.8 (dark bezel color)
 
 ### Key Dimensions
-- Housing base: 5.0 x 0.7 x 6.0 units
-- Screen well: 3.5 x 2.3 units (recessed area)
-- Screen: 3.0 x 1.9 plane at Y=0.76
+- Housing base: 4.5 x 0.8 x 6.0 units
+- Screen well: 3.2 x 2.3 units (recessed area)
+- Screen: 2.7 x 1.9 plane at Y=0.83
 - D-pad arms: 0.24 x 0.1 x 0.56 (vertical) or 0.56 x 0.1 x 0.24 (horizontal)
 - A/B buttons: 0.22 radius cylinders
 - Start/Select: Pill-shaped, 0.25 x 0.08
 
 ### Y-Position Reference
-All elements positioned relative to housing base (Y=0.35):
-- Housing top surface: Y=0.7
-- Screen well floor: Y=0.725
-- Screen surface: Y=0.76
-- Buttons (D-pad, A/B, Start/Select): Y=0.78
-- Speaker holes: Y=0.73
-- Power LED: Y=0.73
+All elements positioned relative to housing base (Y=0.4):
+- Housing top surface: Y=0.8
+- Screen well floor: Y=0.8
+- Screen surface: Y=0.83 (recessed below bezel rails)
+- Bezel rails top: Y=0.875
+- Buttons (D-pad, A/B, Start/Select): Y=0.88
+- Speaker holes: Y=0.83
+- Power LED: Y=0.83
+
+### Screen Position
+- Screen Z position: -1.5 (moved down from -1.8 to fit within handheld)
+- Screen well Z position: -1.5
+
+### Bezel Frame
+- Single seamless frame created with ExtrudeGeometry (rounded rectangle with hole)
+- Outer dimensions: 3.5 x 2.6 units
+- Inner dimensions: 3.2 x 2.3 units (screen well)
+- Height: 0.15 units, corner radius: 0.05
 
 ### Button Positions (X, Y, Z)
-- D-pad group: (-1.3, 0.78, 1.2)
-- A/B button group: (1.3, 0.78, 1.2), rotated -30° on Y
-- Select button: (-0.35, 0.78, 2.2)
-- Start button: (0.35, 0.78, 2.2)
-- Speaker grille: X=1.9+, Y=0.73, Z=-2.5+
-- Power LED: (-1.5, 0.73, -0.5)
+- D-pad group: (-1.17, 0.88, 1.2)
+- A/B button group: (0.95, 0.88, 1.2), rotated -30° on Y
+- Select button: (-0.32, 0.88, 2.2)
+- Start button: (0.32, 0.88, 2.2)
+- Speaker grille: Bottom-right corner, diagonal grooves at 45°
+- Power LED: (-1.35, 0.83, -0.5)
 
-### Button Mapping to 3D Buttons
-```typescript
-Action.MOVE_LEFT  -> dpadLeft
-Action.MOVE_RIGHT -> dpadRight
-Action.SOFT_DROP  -> dpadDown
-Action.ROTATE_CW  -> buttonA
-Action.HARD_DROP  -> buttonB
-Action.HOLD       -> select
-Action.START_PAUSE-> start
-```
+### Speaker Grille
+- 6 diagonal grooves (not dots) in bottom-right corner
+- Groove dimensions: 0.04 x 0.05 x 0.4 units
+- Rotated 45° (π/4) to create diagonal pattern
+- Starting position: (1.44, 0.83, 2.7) with 0.12 spacing
+- Pattern: X increases, Z decreases diagonally
 
-### Button Animation
-- Press depth: 0.04 units
-- Animation speed: 0.25 (lerp factor)
-- Only translate Y position, no scaling
-
-### Colors
-```typescript
-HOUSING_COLOR = 0xC4C4C4      // Light gray (Game Boy)
-SCREEN_BEZEL_COLOR = 0x4A5568 // Dark gray bezel
-DPAD_COLOR = 0x1A1A1A         // Black D-pad
-BUTTON_A_COLOR = 0xA31621     // Red (like Game Boy)
-BUTTON_B_COLOR = 0xA31621     // Red
-START_SELECT_COLOR = 0x4A4A4A // Dark gray
-```
-┌─────────────────────────────┐
-│  ┌─────────────────────┐    │
-│  │      SCREEN         │ ●●●│ <- Speaker grille
-│  │    (320x288)        │ ●●●│
-│  └─────────────────────┘    │
-│                             │
-│   ┌─┐          ┌──┐         │
-│   │↑│         │B │          │
-│ ┌─┼─┼─┐      └──┘           │
-│ │←│ │→│       ┌──┐          │
-│ └─┼─┼─┘       │A │          │
-│   │↓│         └──┘          │
-│   └─┘                       │
-│      [SELECT] [START]       │
-│         ●  Power LED        │
-└─────────────────────────────┘
-```
-
-### Key Dimensions
-- Housing: 5.0 x 0.9 x 3.0 units
-- Screen bezel: 3.4 x 0.15 x 2.2 units (recessed into housing)
-- Screen: 3.0 x 1.9 plane (on top of bezel)
-- D-pad arms: 0.24 x 0.1 x 0.56 (vertical) or 0.56 x 0.1 x 0.24 (horizontal)
-- A/B buttons: 0.22 radius, angled at -30° (π/6)
-- Start/Select: Pill-shaped, 0.25 x 0.08
+### Branding (A3CODEBOY Logo)
+- Single line of text: "A3CODEBOY"
+- Black color (#000000)
+- Slight italic styling (skew transform -0.15)
+- Canvas texture: 256x64 pixels
+- Plane geometry: 0.9 x 0.22 units
+- Position: (-1.35, 0.83, -0.1) - below screen on left side
+- Font: Bold 36px rounded sans-serif
 
 ### Button Mapping to 3D Buttons
 ```typescript
