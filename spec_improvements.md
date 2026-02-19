@@ -342,17 +342,18 @@ All elements positioned relative to housing base (Y=0.4):
 - 8 horizontal grip grooves for texture
 - Removal notch at top of cover
 
-### Cartridge Slot (Top of Device)
-- Slot base: 1.8 x 0.1 x 0.8 units, dark gray (0x3A3A3A)
-- Slot opening: 1.4 x 0.12 x 0.5 units, black interior
-- Position: (0, 0.85, -2.7) - top center of device
+### Cartridge Slot (Back Top of Device)
+- Slot opening: 3.8 x 0.08 x 0.6 units, black interior
+- Position: (0, -0.04, -2.5) - back top center of device
 
 ### BRICKDROP Cartridge
-- Body: 1.3 x 0.35 x 0.45 units, dark gray (0x2D2D2D)
-- Label: Purple background (0x7B3FA0) with "BRICKDROP" text
-- 3 grip lines on back for finger grip
-- Tilted at 15° (π/12) to appear inserted
-- Position: (0, 0.95, -2.7) - protruding from slot
+- Body: 3.6 x 0.5 x 0.4 units, dark gray (0x2D2D2D)
+- Nearly full width of handheld (4.5 units)
+- Label: Purple background (0x7B3FA0) with "BRICKDROP" text, visible on back
+- Label size: 3.4 x 0.35 units
+- 3 grip lines on front for finger grip
+- Position: (0, -0.15, -2.5) - inserted into back slot
+- Only top portion visible with label facing up/back
 
 ### Button Mapping to 3D Buttons
 ```typescript

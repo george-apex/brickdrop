@@ -354,25 +354,18 @@ function createCartridgeSlot(group: THREE.Group): void {
     metalness: 0.2,
   });
 
-  const slotBase = new THREE.Mesh(
-    new THREE.BoxGeometry(1.8, 0.1, 0.8),
-    slotMaterial
-  );
-  slotBase.position.set(0, 0.85, -2.7);
-  group.add(slotBase);
-
   const slotOpening = new THREE.Mesh(
-    new THREE.BoxGeometry(1.4, 0.12, 0.5),
+    new THREE.BoxGeometry(3.8, 0.08, 0.6),
     new THREE.MeshStandardMaterial({
       color: 0x1A1A1A,
       roughness: 0.9,
     })
   );
-  slotOpening.position.set(0, 0.86, -2.7);
+  slotOpening.position.set(0, -0.04, -2.5);
   group.add(slotOpening);
 
   const cartridge = createCartridge();
-  cartridge.position.set(0, 0.95, -2.7);
+  cartridge.position.set(0, -0.15, -2.5);
   group.add(cartridge);
 }
 
@@ -386,24 +379,24 @@ function createCartridge(): THREE.Group {
   });
 
   const cartBody = new THREE.Mesh(
-    new RoundedBoxGeometry(1.3, 0.35, 0.45, 2, 0.05),
+    new RoundedBoxGeometry(3.6, 0.5, 0.4, 2, 0.05),
     cartMaterial
   );
   cartridgeGroup.add(cartBody);
 
   const labelCanvas = document.createElement('canvas');
-  labelCanvas.width = 256;
-  labelCanvas.height = 64;
+  labelCanvas.width = 512;
+  labelCanvas.height = 128;
   const ctx = labelCanvas.getContext('2d')!;
   
   ctx.fillStyle = '#7B3FA0';
-  ctx.fillRect(0, 0, 256, 64);
+  ctx.fillRect(0, 0, 512, 128);
   
-  ctx.font = 'bold 28px Arial';
+  ctx.font = 'bold 48px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillText('BRICKDROP', 128, 32);
+  ctx.fillText('BRICKDROP', 256, 64);
 
   const labelTexture = new THREE.CanvasTexture(labelCanvas);
   const labelTexturedMaterial = new THREE.MeshStandardMaterial({
@@ -412,11 +405,11 @@ function createCartridge(): THREE.Group {
   });
 
   const labelTextured = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.1, 0.25),
+    new THREE.PlaneGeometry(3.4, 0.35),
     labelTexturedMaterial
   );
-  labelTextured.position.set(0, 0.18, 0);
-  labelTextured.rotation.x = -Math.PI / 2;
+  labelTextured.position.set(0, -0.26, 0);
+  labelTextured.rotation.x = Math.PI / 2;
   cartridgeGroup.add(labelTextured);
 
   const gripMaterial = new THREE.MeshStandardMaterial({
@@ -426,14 +419,12 @@ function createCartridge(): THREE.Group {
 
   for (let i = 0; i < 3; i++) {
     const grip = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 0.02, 0.02),
+      new THREE.BoxGeometry(3.0, 0.02, 0.02),
       gripMaterial
     );
-    grip.position.set(0, -0.12, 0.15 - i * 0.08);
+    grip.position.set(0, 0.2, 0.12 - i * 0.06);
     cartridgeGroup.add(grip);
   }
-
-  cartridgeGroup.rotation.x = Math.PI / 12;
 
   return cartridgeGroup;
 }
