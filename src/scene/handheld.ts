@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { SUBTRACTION, ADDITION, Brush, Evaluator } from 'three-bvh-csg';
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
 
 const HOUSING_COLOR = 0xC4C4C4;
 const SCREEN_BEZEL_COLOR = 0x4A5568;
@@ -456,12 +456,12 @@ function createCartridge(group: THREE.Group): void {
 
   ctx.font = 'bold 18px Arial';
   ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'left';
-  ctx.fillText('A3', 20, 115);
+  ctx.textAlign = 'right';
+  ctx.fillText('A3', 492, 115);
 
   ctx.font = 'bold 12px Arial';
   ctx.fillStyle = '#CCCCCC';
-  ctx.fillText('®', 42, 110);
+  ctx.fillText('®', 502, 110);
 
   const labelTexture = new THREE.CanvasTexture(labelCanvas);
   const labelMaterial = new THREE.MeshStandardMaterial({

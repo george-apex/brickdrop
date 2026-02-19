@@ -239,6 +239,13 @@ src/
 }
 ```
 
+### CSG Import for Cartridge Slot
+```typescript
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+```
+
+Used to cut the cartridge slot hole from the housing geometry.
+
 ---
 
 ## 11. Build Commands
@@ -354,12 +361,15 @@ All elements positioned relative to housing base (Y=0.4):
 - Visible portion of cartridge that sits in the slot
 - Body: Dark gray (0x2D2D2D) rounded box, slightly smaller than slot
 - Position: (0, cartDepth/2, -3.0 + 0.35) - protrudes from top-back edge
-- Label: Canvas texture on back face with:
+- Label: Canvas texture (512x128 pixels) on back face with:
   - Purple background (#7B3FA0)
-  - "BRICKDROP" text in gold (#FFD700) on single line
-  - Tetris piece shapes (T, L, I, S, Z, J, O) scattered around text in classic colors
-  - "A3" logo in bottom-left corner (Nintendo-style branding)
+  - "BRICKDROP" text in gold (#FFD700), bold 42px Arial, centered at Y=64
+  - Tetris piece shapes (T, L, I, S, Z, J, O) positioned around text bounds
+  - Each block is 8x8 pixels with 3D beveled edge effect (highlight/shadow)
+  - Classic tetromino colors: I=cyan, O=yellow, T=purple, S=green, Z=red, J=blue, L=orange
+  - "A3®" logo in bottom-right corner (white A3 bold 18px, gray ® bold 12px)
 - Label plane positioned at Y=-0.01 (back face), rotated to face outward
+- Label rotation: X=π/2, Z=π (to display right-side up when viewed from back)
 
 ### Button Mapping to 3D Buttons
 ```typescript
