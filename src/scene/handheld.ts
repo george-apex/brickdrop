@@ -39,6 +39,7 @@ export function createHandheld(): HandheldParts {
   createSpeakerGrille(group);
   createBranding(group);
   createBackDetails(group);
+  createCartridge(group);
 
   return { group, screen, buttons };
 }
@@ -356,4 +357,121 @@ function createBackDetails(group: THREE.Group): void {
   );
   notch.position.set(0, 0.0, 0.12);
   group.add(notch);
+}
+
+function createCartridge(group: THREE.Group): void {
+  const slotWidth = 4.5 * 0.7;
+  const slotHeight = 6.0 * 0.15;
+  const slotDepth = 0.8 * 0.35;
+
+  const cartWidth = slotWidth - 0.05;
+  const cartDepth = slotDepth - 0.02;
+  const cartHeight = slotHeight + 0.15;
+
+  const cartMaterial = new THREE.MeshStandardMaterial({
+    color: 0x2D2D2D,
+    roughness: 0.6,
+    metalness: 0.1,
+  });
+
+  const cartBody = new THREE.Mesh(
+    new RoundedBoxGeometry(cartWidth, cartDepth, cartHeight, 2, 0.03),
+    cartMaterial
+  );
+  cartBody.position.set(0, cartDepth / 2, -3.0 + 0.35);
+  cartBody.castShadow = true;
+  group.add(cartBody);
+
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 512;
+  labelCanvas.height = 128;
+  const ctx = labelCanvas.getContext('2d')!;
+
+  ctx.fillStyle = '#7B3FA0';
+  ctx.fillRect(0, 0, 512, 128);
+
+  const blockColors: Record<string, string> = {
+    I: '#00F0F0',
+    O: '#F0F000',
+    T: '#A000F0',
+    S: '#00F000',
+    Z: '#F00000',
+    J: '#0000F0',
+    L: '#F0A000',
+  };
+
+  const blockSize = 8;
+  
+  function drawBlock(x: number, y: number, color: string) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, blockSize - 1, blockSize - 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillRect(x, y, blockSize - 1, 2);
+    ctx.fillRect(x, y, 2, blockSize - 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(x + blockSize - 3, y + 2, 2, blockSize - 3);
+    ctx.fillRect(x + 2, y + blockSize - 3, blockSize - 3, 2);
+  }
+
+  function drawTetromino(x: number, y: number, shape: number[][], color: string) {
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (shape[row][col]) {
+          drawBlock(x + col * blockSize, y + row * blockSize, color);
+        }
+      }
+    }
+  }
+
+  const I = [[1,1,1,1]];
+  const O = [[1,1],[1,1]];
+  const T = [[1,1,1],[0,1,0]];
+  const S = [[0,1,1],[1,1,0]];
+  const Z = [[1,1,0],[0,1,1]];
+  const J = [[1,0,0],[1,1,1]];
+  const L = [[0,0,1],[1,1,1]];
+
+  ctx.font = 'bold 42px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const text = 'BRICKDROP';
+  const textWidth = ctx.measureText(text).width;
+  let currentX = (512 - textWidth) / 2;
+  const textY = 55;
+
+  ctx.fillStyle = '#FFD700';
+  ctx.fillText(text, 256, textY);
+
+  drawTetromino(currentX - 35, textY - 20, T, blockColors.T);
+  drawTetromino(currentX + 50, textY - 15, L, blockColors.L);
+  drawTetromino(currentX + 130, textY - 18, I, blockColors.I);
+  drawTetromino(currentX + 200, textY - 15, S, blockColors.S);
+  drawTetromino(currentX + 280, textY - 18, Z, blockColors.Z);
+  drawTetromino(currentX + 350, textY - 15, J, blockColors.J);
+  drawTetromino(currentX + 420, textY - 18, O, blockColors.O);
+
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'left';
+  ctx.fillText('A3', 20, 115);
+
+  ctx.font = 'bold 12px Arial';
+  ctx.fillStyle = '#CCCCCC';
+  ctx.fillText('®', 42, 110);
+
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const labelMaterial = new THREE.MeshStandardMaterial({
+    map: labelTexture,
+    roughness: 0.5,
+  });
+
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(cartWidth - 0.1, cartHeight - 0.1),
+    labelMaterial
+  );
+  label.position.set(0, -0.01, -3.0 + 0.35);
+  label.rotation.x = Math.PI / 2;
+  label.rotation.z = Math.PI;
+  group.add(label);
 }

@@ -350,6 +350,17 @@ All elements positioned relative to housing base (Y=0.4):
 - Position: Top edge of back face (Y=0.14, Z=-2.55) - where "top" is the edge nearest the top of the screen
 - The slot is a true hole cut through the housing geometry, not a separate mesh
 
+### BRICKDROP Cartridge
+- Visible portion of cartridge that sits in the slot
+- Body: Dark gray (0x2D2D2D) rounded box, slightly smaller than slot
+- Position: (0, cartDepth/2, -3.0 + 0.35) - protrudes from top-back edge
+- Label: Canvas texture on back face with:
+  - Purple background (#7B3FA0)
+  - "BRICKDROP" text in gold (#FFD700) on single line
+  - Tetris piece shapes (T, L, I, S, Z, J, O) scattered around text in classic colors
+  - "A3" logo in bottom-left corner (Nintendo-style branding)
+- Label plane positioned at Y=-0.01 (back face), rotated to face outward
+
 ### Button Mapping to 3D Buttons
 ```typescript
 Action.MOVE_LEFT  -> dpadLeft
