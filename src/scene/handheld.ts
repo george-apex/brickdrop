@@ -65,13 +65,74 @@ export function createFullCartridge(): THREE.Group {
     metalness: 0.1,
   });
 
-  const cartBody = new THREE.Mesh(
-    new RoundedBoxGeometry(cartWidth, cartDepth, fullCartHeight, 2, 0.03),
+  const mainBodyHeight = fullCartHeight - 0.2;
+  const mainBodyBrush = new Brush(
+    new RoundedBoxGeometry(cartWidth, cartDepth, mainBodyHeight, 2, 0.03),
     cartMaterial
   );
-  cartBody.castShadow = true;
-  cartBody.receiveShadow = true;
-  group.add(cartBody);
+  mainBodyBrush.updateMatrixWorld();
+
+  const connectorRecessWidth = cartWidth * 0.7;
+  const connectorRecessDepth = cartDepth * 0.7;
+  const connectorRecessHeight = 0.35;
+  
+  const connectorRecessBrush = new Brush(
+    new THREE.BoxGeometry(connectorRecessWidth, connectorRecessDepth, connectorRecessHeight),
+    cartMaterial
+  );
+  connectorRecessBrush.position.set(0, 0, -mainBodyHeight / 2 + connectorRecessHeight / 2 - 0.05);
+  connectorRecessBrush.updateMatrixWorld();
+
+  const labelRecessWidth = cartWidth - 0.1;
+  const labelRecessHeight = visibleHeight - 0.1;
+  const labelRecessDepth = 0.08;
+  
+  const labelRecessBrush = new Brush(
+    new THREE.BoxGeometry(labelRecessWidth, labelRecessDepth, labelRecessHeight),
+    cartMaterial
+  );
+  labelRecessBrush.position.set(0, -cartDepth / 2 + labelRecessDepth / 2, mainBodyHeight / 2 - visibleHeight / 2);
+  labelRecessBrush.updateMatrixWorld();
+
+  const evaluator = new Evaluator();
+  const cartWithConnectorHole = evaluator.evaluate(mainBodyBrush, connectorRecessBrush, SUBTRACTION);
+  cartWithConnectorHole.updateMatrixWorld();
+  
+  const cartWithBothHoles = evaluator.evaluate(cartWithConnectorHole, labelRecessBrush, SUBTRACTION);
+  cartWithBothHoles.castShadow = true;
+  cartWithBothHoles.receiveShadow = true;
+  group.add(cartWithBothHoles);
+
+  const ridgeSectionHeight = 0.2;
+  const ridgeSection = new THREE.Mesh(
+    new THREE.BoxGeometry(cartWidth, cartDepth, ridgeSectionHeight),
+    cartMaterial
+  );
+  ridgeSection.position.z = mainBodyHeight / 2 + ridgeSectionHeight / 2;
+  ridgeSection.castShadow = true;
+  group.add(ridgeSection);
+
+  const pinMaterial = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37,
+    roughness: 0.2,
+    metalness: 0.9,
+  });
+  
+  const pinCount = 15;
+  const pinWidth = connectorRecessWidth * 0.04;
+  const pinHeight = connectorRecessDepth * 0.5;
+  const pinDepth = 0.06;
+  const pinSpacing = (connectorRecessWidth - pinWidth) / (pinCount - 1);
+  
+  for (let i = 0; i < pinCount; i++) {
+    const pin = new THREE.Mesh(
+      new THREE.BoxGeometry(pinWidth, pinHeight, pinDepth),
+      pinMaterial
+    );
+    const xOffset = -connectorRecessWidth / 2 + i * pinSpacing + pinWidth / 2;
+    pin.position.set(xOffset, 0, -mainBodyHeight / 2 + pinDepth / 2 + 0.02);
+    group.add(pin);
+  }
 
   const labelCanvas = document.createElement('canvas');
   labelCanvas.width = 512;
@@ -158,29 +219,18 @@ export function createFullCartridge(): THREE.Group {
   const labelMaterial = new THREE.MeshStandardMaterial({
     map: labelTexture,
     roughness: 0.5,
+    side: THREE.DoubleSide,
   });
 
   const label = new THREE.Mesh(
-    new THREE.PlaneGeometry(cartWidth - 0.1, visibleHeight - 0.1),
+    new THREE.PlaneGeometry(labelRecessWidth - 0.05, labelRecessHeight - 0.05),
     labelMaterial
   );
-  label.position.set(0, -cartDepth / 2 - 0.01, fullCartHeight / 2 - visibleHeight / 2);
+  label.position.set(0, -cartDepth / 2 + 0.005, mainBodyHeight / 2 - visibleHeight / 2);
   label.rotation.x = -Math.PI / 2;
   label.rotation.z = Math.PI;
+  label.scale.x = -1;
   group.add(label);
-
-  const connectorMaterial = new THREE.MeshStandardMaterial({
-    color: 0xD4AF37,
-    roughness: 0.3,
-    metalness: 0.8,
-  });
-  
-  const connector = new THREE.Mesh(
-    new THREE.BoxGeometry(cartWidth * 0.7, 0.08, 0.15),
-    connectorMaterial
-  );
-  connector.position.set(0, 0, -fullCartHeight / 2 + 0.1);
-  group.add(connector);
 
   const notchMaterial = new THREE.MeshStandardMaterial({
     color: 0x1a1a1a,
@@ -191,7 +241,7 @@ export function createFullCartridge(): THREE.Group {
     new THREE.BoxGeometry(cartWidth * 0.3, cartDepth * 0.6, 0.08),
     notchMaterial
   );
-  notch.position.set(0, 0, fullCartHeight / 2 - 0.1);
+  notch.position.set(0, 0, mainBodyHeight / 2 + ridgeSectionHeight - 0.1);
   group.add(notch);
 
   return group;

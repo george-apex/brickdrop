@@ -524,6 +524,127 @@ window.addEventListener('click', this.onClick.bind(this));
 
 ---
 
+## 14. Full Cartridge CSG Details
+
+The `createFullCartridge()` function uses CSG (Constructive Solid Geometry) to create realistic recessed areas for the connector and label.
+
+### CSG Subtraction for Recesses
+
+```typescript
+import { SUBTRACTION, Brush, Evaluator } from 'three-bvh-csg';
+
+// Main body
+const mainBodyBrush = new Brush(
+  new RoundedBoxGeometry(cartWidth, cartDepth, mainBodyHeight, 2, 0.03),
+  cartMaterial
+);
+mainBodyBrush.updateMatrixWorld();
+
+// Connector recess (Z- end)
+const connectorRecessBrush = new Brush(
+  new THREE.BoxGeometry(connectorRecessWidth, connectorRecessDepth, connectorRecessHeight),
+  cartMaterial
+);
+connectorRecessBrush.position.set(0, 0, -mainBodyHeight / 2 + connectorRecessHeight / 2 - 0.05);
+connectorRecessBrush.updateMatrixWorld();
+
+// Label recess (Y- face)
+const labelRecessBrush = new Brush(
+  new THREE.BoxGeometry(labelRecessWidth, labelRecessDepth, labelRecessHeight),
+  cartMaterial
+);
+labelRecessBrush.position.set(0, -cartDepth / 2 + labelRecessDepth / 2, mainBodyHeight / 2 - visibleHeight / 2);
+labelRecessBrush.updateMatrixWorld();
+
+// Apply CSG subtraction
+const evaluator = new Evaluator();
+const cartWithConnectorHole = evaluator.evaluate(mainBodyBrush, connectorRecessBrush, SUBTRACTION);
+const cartWithBothHoles = evaluator.evaluate(cartWithConnectorHole, labelRecessBrush, SUBTRACTION);
+```
+
+### Key Dimensions for CSG
+
+- **mainBodyHeight**: `fullCartHeight - 0.2` (slightly shorter than full cartridge to allow for ridge section)
+- **connectorRecessHeight**: 0.35 units (deep enough to be visible)
+- **labelRecessDepth**: 0.08 units (shallow recess for label to sit in)
+
+### Critical CSG Positioning Notes
+
+1. **Do NOT offset the main body brush** - Keep it centered at origin (no position offset)
+2. **Position recesses relative to mainBodyHeight**, not fullCartHeight
+3. **Recess must overlap with main body** - If recess is too shallow or positioned outside the body, CSG won't cut
+4. **Always call `updateMatrixWorld()`** on each brush before CSG evaluation
+
+### Label Positioning and Orientation
+
+The label is a plane geometry positioned in the label recess:
+
+```typescript
+const label = new THREE.Mesh(
+  new THREE.PlaneGeometry(labelRecessWidth - 0.05, labelRecessHeight - 0.05),
+  labelMaterial
+);
+label.position.set(0, -cartDepth / 2 + 0.005, mainBodyHeight / 2 - visibleHeight / 2);
+label.rotation.x = -Math.PI / 2;
+label.rotation.z = Math.PI;
+label.scale.x = -1;  // Fix horizontal mirroring
+group.add(label);
+```
+
+**Why the rotations and scale:**
+- `rotation.x = -Math.PI / 2`: Rotates plane from X-Y to X-Z orientation (horizontal)
+- `rotation.z = Math.PI`: Flips 180° to correct upside-down text
+- `scale.x = -1`: Mirrors horizontally to fix left-right reversal
+
+### Gold Connector Pins
+
+Pins are positioned inside the connector recess:
+
+```typescript
+const pinCount = 15;
+const pinWidth = connectorRecessWidth * 0.04;
+const pinHeight = connectorRecessDepth * 0.5;
+const pinDepth = 0.06;
+const pinSpacing = (connectorRecessWidth - pinWidth) / (pinCount - 1);
+
+for (let i = 0; i < pinCount; i++) {
+  const pin = new THREE.Mesh(
+    new THREE.BoxGeometry(pinWidth, pinHeight, pinDepth),
+    pinMaterial  // Gold metallic: 0xD4AF37, roughness 0.2, metalness 0.9
+  );
+  const xOffset = -connectorRecessWidth / 2 + i * pinSpacing + pinWidth / 2;
+  pin.position.set(xOffset, 0, -mainBodyHeight / 2 + pinDepth / 2 + 0.02);
+  group.add(pin);
+}
+```
+
+### Ridge Section
+
+A separate box at the top (Z+ end) of the cartridge:
+
+```typescript
+const ridgeSection = new THREE.Mesh(
+  new THREE.BoxGeometry(cartWidth, cartDepth, ridgeSectionHeight),
+  cartMaterial
+);
+ridgeSection.position.z = mainBodyHeight / 2 + ridgeSectionHeight / 2;
+```
+
+### Common CSG Issues & Fixes
+
+**Issue: CSG holes not visible**
+- Cause: Recess brush doesn't overlap with main body
+- Fix: Increase recess depth/height, verify position values overlap with main body bounds
+
+**Issue: Label not visible**
+- Cause: Label positioned outside cartridge bounds
+- Fix: Position at `-cartDepth / 2 + small_offset` (just above Y- face)
+
+**Issue: Label upside down or mirrored**
+- Fix: Apply both `rotation.z = Math.PI` AND `scale.x = -1`
+
+---
+
 ## 14. Debug Axis Arrows
 
 For spatial communication during development, axis arrows can be displayed:
