@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createRenderer, createCamera, createScene, createControls, createLights, createAxisArrows } from './scene/setup';
+import { createRenderer, createCamera, createScene, createControls, createLights } from './scene/setup';
 import { createHandheld, createFullCartridge } from './scene/handheld';
 import type { HandheldParts } from './scene/handheld';
 import { ButtonController } from './scene/buttons';
@@ -37,7 +37,6 @@ export class App {
     this.controls = createControls(this.camera, this.renderer.domElement);
     
     createLights(this.scene);
-    createAxisArrows(this.scene);
     
     this.handheld = createHandheld(false);
     this.scene.add(this.handheld.group);

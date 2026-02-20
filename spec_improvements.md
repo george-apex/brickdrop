@@ -138,7 +138,19 @@ export interface GameState {
 }
 ```
 
-In `engine.ts`, set `playing: true` in the `start()` method.
+In `engine.ts`, set `playing: true` in the `start()` method:
+
+```typescript
+start(): void {
+  this.randomizer.reset();
+  this.state = this.createInitialState();
+  this.status = GameStatus.PLAYING;
+  this.state.playing = true;  // CRITICAL: Prevents attract screen during gameplay
+  this.spawnPiece();
+}
+```
+
+**Why this matters:** The renderer checks `!state.playing && !state.gameOver` to show the attract screen. If `playing` is not set to `true` when the game starts, the "Press ENTER to start" message will display over gameplay.
 
 ---
 
@@ -193,6 +205,32 @@ The `InputHandler` class implements:
 - **ARR (Auto Repeat Rate)**: 50ms between repeated inputs
 
 Only applies to left/right movement, not other actions.
+
+### Keyboard Controls
+
+```typescript
+const KEY_MAP: Record<string, number> = {
+  'ArrowLeft': Action.MOVE_LEFT,
+  'ArrowRight': Action.MOVE_RIGHT,
+  'ArrowDown': Action.SOFT_DROP,
+  'ArrowUp': Action.ROTATE_CW,
+  'KeyZ': Action.ROTATE_CCW,
+  'KeyX': Action.ROTATE_CW,
+  'Space': Action.HARD_DROP,
+  'KeyC': Action.HOLD,
+  'Enter': Action.START_PAUSE,
+  'KeyR': Action.RESTART,
+};
+```
+
+**Summary:**
+- **Move**: Arrow keys (Left/Right/Down for soft drop)
+- **Rotate CW**: Up arrow or X
+- **Rotate CCW**: Z
+- **Hard Drop**: Space
+- **Hold**: C
+- **Pause/Start**: Enter
+- **Restart**: R
 
 ---
 
@@ -665,7 +703,7 @@ import { createAxisArrows } from './scene/setup';
 createAxisArrows(this.scene);
 ```
 
-Remove or comment out when not needed for production.
+**Note:** Debug axis arrows should be removed for production. They are not included in the final build.
 
 ---
 

@@ -46,6 +46,7 @@ export class GameEngine {
     this.randomizer.reset();
     this.state = this.createInitialState();
     this.status = GameStatus.PLAYING;
+    this.state.playing = true;
     this.spawnPiece();
   }
   
